@@ -27,36 +27,57 @@
 <div id="letterboxBot"></div>
 <canvas id="transCanvas"></canvas>
 
-<!-- Floating pills -->
-<div id="showBadge"></div>
-<div class="utc-pill" id="utcPill">UTC --:--:--</div>
-<div id="weatherPill">
-  <span id="weatherIcon">☁</span>
-  <span id="weatherText">--°</span>
-</div>
+<!-- Top bar -->
+<header class="topbar">
+  <div id="weatherPill" class="topbar-pill">
+    <span id="weatherIcon">☁</span>
+    <span id="weatherText">--°</span>
+  </div>
 
-<!-- Main clock UI -->
-<div class="main" id="mainUI">
-  <div class="greeting" id="greeting">Good morning</div>
-  <div>
+  <div id="showBadge" class="showbadge"></div>
+
+  <div class="topbar-right">
+    <div class="utc-pill" id="utcPill">UTC --:--:--</div>
+    <a class="topbar-icon-btn" href="https://github.com/ADJ189/Accurate-Time-" target="_blank" rel="noopener" title="GitHub">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+    </a>
+    <button class="topbar-icon-btn" id="btnKbShortcuts" title="Keyboard shortcuts (?)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Main clock -->
+<main class="main" id="mainUI">
+
+  <p class="greeting" id="greeting">Good morning</p>
+
+  <div class="clock-block">
     <div class="clock-wrap">
       <div class="time-display" id="timeDis">--<span class="colon">:</span>--<span class="colon">:</span>--</div>
       <div class="ampm" id="ampmDis">--</div>
     </div>
     <div class="seconds-ms" id="secMs">.---</div>
   </div>
-  <div class="date-display" id="dateDis">—</div>
+
+  <p class="date-display" id="dateDis">—</p>
 
   <!-- Day progress -->
   <div class="progress-wrap">
-    <div class="progress-labels"><span>Day Progress</span><span id="dayPct">0%</span></div>
-    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-labels">
+      <span>Day Progress</span>
+      <span id="dayPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
   </div>
 
-  <!-- Session / Pomodoro -->
-  <div class="session-area">
+  <!-- Session card -->
+  <div class="session-card">
     <div class="pom-mode-pill" id="pomModePill">🍅 Pomodoro</div>
     <div class="session-label" id="sessionLabel">Session Timer</div>
+
     <div id="pomRingWrap">
       <svg id="pomRingSvg" width="0" height="0" viewBox="0 0 120 120" style="display:none">
         <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>
@@ -66,110 +87,153 @@
       </svg>
       <div class="session-timer" id="sessionTimer">00:00:00</div>
     </div>
+
     <div id="focusInputWrap">
-      <span id="focusTag">Working on:</span>
+      <span id="focusTag">Working on</span>
       <input id="focusInput" type="text" placeholder="what are you working on?" maxlength="60" autocomplete="off"/>
     </div>
+
     <div class="session-controls">
-      <button class="btn" id="btnStart">Start</button>
-      <button class="btn" id="btnReset">Reset</button>
-      <button class="btn" id="btnPomToggle" title="Toggle Pomodoro mode">🍅</button>
-      <button class="btn" id="btnLog" title="Session log">📋</button>
+      <button class="btn btn-primary" id="btnStart">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Start
+      </button>
+      <button class="btn btn-ghost" id="btnReset">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset
+      </button>
+      <button class="btn btn-icon" id="btnPomToggle" title="Pomodoro">🍅</button>
+      <button class="btn btn-icon" id="btnLog" title="Focus log">📋</button>
     </div>
   </div>
 
-  <!-- Sync status -->
+  <!-- Sync -->
   <div class="sync-pill">
     <div class="sync-dot" id="syncDot"></div>
     <span id="syncLabel">Syncing…</span>
   </div>
 
-  <!-- Quote / literary clock -->
+  <!-- Quote -->
   <div class="quote-area">
-    <div class="quote-text" id="quoteText"></div>
-    <div class="lit-meta" id="litMeta"></div>
+    <p class="quote-text" id="quoteText"></p>
+    <p class="lit-meta" id="litMeta"></p>
+  </div>
+
+</main>
+
+<!-- Dock-style theme panel -->
+<div id="themePanel">
+  <button id="panelToggle" aria-label="Toggle themes">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    Themes
+    <span id="panelChevron">▾</span>
+  </button>
+  <div class="panel-body">
+    <div id="themePanelRows"></div>
+    <div class="feat-dock" id="featBar"></div>
   </div>
 </div>
 
-<!-- Theme panel -->
-<div id="themePanel">
-  <button id="panelToggle"><span id="panelArrow">▲</span></button>
-  <div id="themePanelRows"></div>
-  <div id="featBar"></div>
-</div>
+<!-- Reveal button -->
+<button id="themesRevealBtn" aria-label="Show themes">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  Themes
+</button>
 
-<!-- Modals -->
+<!-- MODALS -->
 <div class="sc-overlay" id="logOverlay">
   <div class="sc-modal">
-    <button class="modal-close" onclick="SC.modals.close('logOverlay')">✕</button>
-    <h2>📋 Session Focus Log</h2>
+    <div class="modal-header">
+      <h2>📋 Session Log</h2>
+      <button class="modal-close" onclick="SC.modals.close('logOverlay')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
     <div id="logEntries"></div>
     <div class="log-actions">
-      <button class="btn" onclick="SC.focusLog.exportCSV()">Export CSV</button>
-      <button class="btn" onclick="SC.focusLog.clear()">Clear</button>
+      <button class="btn btn-ghost" onclick="SC.focusLog.exportCSV()">Export CSV</button>
+      <button class="btn btn-ghost" onclick="SC.focusLog.clear()">Clear All</button>
     </div>
   </div>
 </div>
 
 <div class="sc-overlay" id="themeBuilderOverlay">
   <div class="sc-modal">
-    <button class="modal-close" onclick="SC.modals.close('themeBuilderOverlay')">✕</button>
-    <h2>🎨 Custom Theme Builder</h2>
+    <div class="modal-header">
+      <h2>🎨 Custom Theme</h2>
+      <button class="modal-close" onclick="SC.modals.close('themeBuilderOverlay')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
     <h3>Colors</h3>
     <div id="colorRows"></div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn" onclick="SC.themeBuilder.preview()">Preview</button>
-      <button class="btn" onclick="SC.themeBuilder.save()">Save Theme</button>
-      <button class="btn" onclick="SC.themeBuilder.reset()">Reset</button>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="SC.themeBuilder.preview()">Preview</button>
+      <button class="btn btn-ghost" onclick="SC.themeBuilder.save()">Save</button>
+      <button class="btn btn-ghost" onclick="SC.themeBuilder.reset()">Reset</button>
     </div>
-    <h3>Saved Custom Themes</h3>
+    <h3>Saved Themes</h3>
     <div class="saved-theme-row" id="savedThemeRow"></div>
   </div>
 </div>
 
 <div class="sc-overlay" id="soundOverlay">
   <div class="sc-modal">
-    <button class="modal-close" onclick="SC.modals.close('soundOverlay')">✕</button>
-    <h2>🎵 Ambient Soundscapes</h2>
-    <div class="sound-grid" id="soundGrid"></div>
-    <div class="vol-row">
-      <span class="vol-label">Volume</span>
-      <input type="range" class="sc-range" id="volSlider" min="0" max="100" value="40">
-      <span class="vol-label" id="volLabel">40%</span>
+    <div class="modal-header">
+      <h2>🎵 Sound Mixer</h2>
+      <button class="modal-close" onclick="SC.modals.close('soundOverlay')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
     </div>
-    <div class="vol-row" style="margin-top:6px">
-      <span class="vol-label">Fade out timer</span>
-      <input type="range" class="sc-range" id="fadeSlider" min="0" max="60" value="0">
-      <span class="vol-label" id="fadeLabel">Off</span>
+    <div class="sound-mixer">
+      <div class="sound-tracks" id="soundGrid"></div>
+      <div class="sound-master">
+        <div class="sound-master-row">
+          <span class="sound-master-lbl">Master</span>
+          <input type="range" class="sc-range master-vol-slider" id="volSlider" min="0" max="100" value="70">
+          <span class="sound-vol-pct" id="volLabel">70%</span>
+        </div>
+        <div class="sound-master-row" style="margin-top:10px">
+          <span class="sound-master-lbl">Fade out</span>
+          <input type="range" class="sc-range" id="fadeSlider" min="0" max="60" value="0">
+          <span class="sound-vol-pct" id="fadeLabel">Off</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="sc-overlay" id="kbOverlay">
-  <div class="sc-modal">
-    <button class="modal-close" onclick="SC.modals.close('kbOverlay')">✕</button>
-    <h2>⌨️ Keyboard Shortcuts</h2>
+  <div class="sc-modal sc-modal--narrow">
+    <div class="modal-header">
+      <h2>⌨️ Shortcuts</h2>
+      <button class="modal-close" onclick="SC.modals.close('kbOverlay')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
     <div class="kb-grid" id="kbGrid"></div>
   </div>
 </div>
 
 <div class="sc-overlay" id="pomOverlay">
   <div class="sc-modal">
-    <button class="modal-close" onclick="SC.modals.close('pomOverlay')">✕</button>
-    <h2>🍅 Pomodoro Settings</h2>
-    <h3>Work duration (minutes)</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap" id="pomWorkBtns"></div>
-    <h3>Break duration (minutes)</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap" id="pomBreakBtns"></div>
-    <h3>Long break after N pomodoros</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap" id="pomLongBtns"></div>
-    <div style="margin-top:14px;font-size:.7rem;opacity:.4;color:var(--clr-text)">
-      Sessions completed today: <span id="pomCountToday">0</span>
+    <div class="modal-header">
+      <h2>🍅 Pomodoro</h2>
+      <button class="modal-close" onclick="SC.modals.close('pomOverlay')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
     </div>
+    <h3>Work duration</h3>
+    <div class="pill-group" id="pomWorkBtns"></div>
+    <h3>Short break</h3>
+    <div class="pill-group" id="pomBreakBtns"></div>
+    <h3>Long break after</h3>
+    <div class="pill-group" id="pomLongBtns"></div>
+    <p class="pom-today">Completed today: <strong><span id="pomCountToday">0</span></strong></p>
   </div>
 </div>
 
-<div id="kbHint">Press ? for shortcuts</div>
+<div id="kbHint">Press <kbd>?</kbd> for shortcuts</div>
 
 <script type="module" src="src/main.ts"></script>
 </body>
