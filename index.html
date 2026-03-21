@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Session Clock — animated themes, Pomodoro, ambient sound, literary clock, focus log and more.">
+<meta name="theme-color" content="#06030f">
+<meta property="og:title" content="Session Clock">
+<meta property="og:description" content="A beautiful animated clock with 30+ themes, Pomodoro, ambient soundscapes, literary clock and session logging.">
+<meta property="og:type" content="website">
+<title>Session Clock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;700;900&family=Comfortaa:wght@300;400;700&family=Josefin+Sans:wght@100;300;400;600&family=Fraunces:ital,wght@0,100;0,700;1,400&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Special+Elite&family=Nunito:wght@300;400;600;700;800&family=IM+Fell+English:ital@0;1&family=Teko:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Canvas layers -->
+<canvas id="bgCanvas"></canvas>
+<div id="overlay"></div>
+<div id="vignette"></div>
+<div id="hdrBloom"></div>
+<div id="scanlines"></div>
+<div id="grain"></div>
+<div id="letterboxTop"></div>
+<div id="letterboxBot"></div>
+<canvas id="transCanvas"></canvas>
+
+<!-- Floating pills -->
+<div id="showBadge"></div>
+<div class="utc-pill" id="utcPill">UTC --:--:--</div>
+<div id="weatherPill">
+  <span id="weatherIcon">☁</span>
+  <span id="weatherText">--°</span>
+</div>
+
+<!-- Main clock UI -->
+<div class="main" id="mainUI">
+  <div class="greeting" id="greeting">Good morning</div>
+  <div>
+    <div class="clock-wrap">
+      <div class="time-display" id="timeDis">--<span class="colon">:</span>--<span class="colon">:</span>--</div>
+      <div class="ampm" id="ampmDis">--</div>
+    </div>
+    <div class="seconds-ms" id="secMs">.---</div>
+  </div>
+  <div class="date-display" id="dateDis">—</div>
+
+  <!-- Day progress -->
+  <div class="progress-wrap">
+    <div class="progress-labels"><span>Day Progress</span><span id="dayPct">0%</span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- Session / Pomodoro -->
+  <div class="session-area">
+    <div class="pom-mode-pill" id="pomModePill">🍅 Pomodoro</div>
+    <div class="session-label" id="sessionLabel">Session Timer</div>
+    <div id="pomRingWrap">
+      <svg id="pomRingSvg" width="0" height="0" viewBox="0 0 120 120" style="display:none">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>
+        <circle id="pomRingArc" cx="60" cy="60" r="54" fill="none" stroke="var(--clr-accent)"
+                stroke-width="3" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="0"
+                transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .5s linear,stroke .5s"/>
+      </svg>
+      <div class="session-timer" id="sessionTimer">00:00:00</div>
+    </div>
+    <div id="focusInputWrap">
+      <span id="focusTag">Working on:</span>
+      <input id="focusInput" type="text" placeholder="what are you working on?" maxlength="60" autocomplete="off"/>
+    </div>
+    <div class="session-controls">
+      <button class="btn" id="btnStart">Start</button>
+      <button class="btn" id="btnReset">Reset</button>
+      <button class="btn" id="btnPomToggle" title="Toggle Pomodoro mode">🍅</button>
+      <button class="btn" id="btnLog" title="Session log">📋</button>
+    </div>
+  </div>
+
+  <!-- Sync status -->
+  <div class="sync-pill">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncLabel">Syncing…</span>
+  </div>
+
+  <!-- Quote / literary clock -->
+  <div class="quote-area">
+    <div class="quote-text" id="quoteText"></div>
+    <div class="lit-meta" id="litMeta"></div>
+  </div>
+</div>
+
+<!-- Theme panel -->
+<div id="themePanel">
+  <button id="panelToggle"><span id="panelArrow">▲</span></button>
+  <div id="themePanelRows"></div>
+  <div id="featBar"></div>
+</div>
+
+<!-- Modals -->
+<div class="sc-overlay" id="logOverlay">
+  <div class="sc-modal">
+    <button class="modal-close" onclick="SC.modals.close('logOverlay')">✕</button>
+    <h2>📋 Session Focus Log</h2>
+    <div id="logEntries"></div>
+    <div class="log-actions">
+      <button class="btn" onclick="SC.focusLog.exportCSV()">Export CSV</button>
+      <button class="btn" onclick="SC.focusLog.clear()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<div class="sc-overlay" id="themeBuilderOverlay">
+  <div class="sc-modal">
+    <button class="modal-close" onclick="SC.modals.close('themeBuilderOverlay')">✕</button>
+    <h2>🎨 Custom Theme Builder</h2>
+    <h3>Colors</h3>
+    <div id="colorRows"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn" onclick="SC.themeBuilder.preview()">Preview</button>
+      <button class="btn" onclick="SC.themeBuilder.save()">Save Theme</button>
+      <button class="btn" onclick="SC.themeBuilder.reset()">Reset</button>
+    </div>
+    <h3>Saved Custom Themes</h3>
+    <div class="saved-theme-row" id="savedThemeRow"></div>
+  </div>
+</div>
+
+<div class="sc-overlay" id="soundOverlay">
+  <div class="sc-modal">
+    <button class="modal-close" onclick="SC.modals.close('soundOverlay')">✕</button>
+    <h2>🎵 Ambient Soundscapes</h2>
+    <div class="sound-grid" id="soundGrid"></div>
+    <div class="vol-row">
+      <span class="vol-label">Volume</span>
+      <input type="range" class="sc-range" id="volSlider" min="0" max="100" value="40">
+      <span class="vol-label" id="volLabel">40%</span>
+    </div>
+    <div class="vol-row" style="margin-top:6px">
+      <span class="vol-label">Fade out timer</span>
+      <input type="range" class="sc-range" id="fadeSlider" min="0" max="60" value="0">
+      <span class="vol-label" id="fadeLabel">Off</span>
+    </div>
+  </div>
+</div>
+
+<div class="sc-overlay" id="kbOverlay">
+  <div class="sc-modal">
+    <button class="modal-close" onclick="SC.modals.close('kbOverlay')">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="kb-grid" id="kbGrid"></div>
+  </div>
+</div>
+
+<div class="sc-overlay" id="pomOverlay">
+  <div class="sc-modal">
+    <button class="modal-close" onclick="SC.modals.close('pomOverlay')">✕</button>
+    <h2>🍅 Pomodoro Settings</h2>
+    <h3>Work duration (minutes)</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="pomWorkBtns"></div>
+    <h3>Break duration (minutes)</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="pomBreakBtns"></div>
+    <h3>Long break after N pomodoros</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="pomLongBtns"></div>
+    <div style="margin-top:14px;font-size:.7rem;opacity:.4;color:var(--clr-text)">
+      Sessions completed today: <span id="pomCountToday">0</span>
+    </div>
+  </div>
+</div>
+
+<div id="kbHint">Press ? for shortcuts</div>
+
+<script type="module" src="src/main.ts"></script>
+</body>
+</html>
