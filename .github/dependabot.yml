@@ -1,0 +1,82 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.g# Dependabot configuration for Session Clock
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+
+updates:
+
+  # ── npm dependencies ──────────────────────────────────────────────────
+  # Covers: vite, typescript, terser (devDependencies)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    # Only open 3 PRs at a time — keeps it manageable
+    open-pull-requests-limit: 3
+    # Group all minor + patch updates into one PR per week
+    # Major versions get their own PR (breaking changes)
+    groups:
+      dev-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Meaningful commit messages
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps(dev)"
+      include: "scope"
+    # Auto-label the PRs
+    labels:
+      - "dependencies"
+      - "automated"
+    # Reviewers — add your GitHub username
+    reviewers:
+      - "ADJ189"
+    # Ignore major version bumps for vite (breaking config changes)
+    ignore:
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+
+  # ── GitHub Actions ───────────────────────────────────────────────────
+  # Covers: actions/checkout, actions/setup-node,
+  #         actions/upload-pages-artifact, actions/deploy-pages
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    reviewers:
+      - "ADJ189"
+ithub.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
