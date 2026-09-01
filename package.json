@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start": "vite preview --host 0.0.0.0"
   },
   "keywords": [],
   "author": "",
@@ -20,5 +21,8 @@
     "dexie": "^4.4.5",
     "liricle": "^4.2.0"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
 }

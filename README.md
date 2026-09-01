@@ -124,3 +124,14 @@ src/
 public/
   manifest.json, sw.js            PWA shell caching
 ```
+
+
+## Deno Deploy
+
+This project is a Vite browser application. For Deno Deploy, use the repository build settings below:
+
+- Install command: `npm install`
+- Build command: `npm run build`
+- Output directory: `dist`
+
+The included `deno.json` mirrors the local Vite tasks for Deno's Node/npm compatibility layer. No custom Deno HTTP server is required; the built `dist/` directory is the deployment artifact.
