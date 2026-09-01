@@ -1,161 +1,126 @@
-# 🕐 Session Clock v8
+# Session Clock · Music
 
-A beautiful, animated clock app with 32 themes, Pomodoro mode, ambient soundscapes, a literary clock, session focus logging, and more — built in **TypeScript** with **Vite**, zero runtime dependencies.
+Full player, not just a shell: playback, library, playlists, lyrics,
+visualizer, PWA. Typechecked (`npm run typecheck`) and buildable
+(`npm run build`) end to end. Not wired to a live audio source yet — see
+"What's stubbed."
 
----
+## What was borrowed, and from where
 
-## ✨ Features
+**LiMusic (`limusic-master`)** — the animatable-artwork-tint technique:
+registering `--accent-h/-s/-l` as typed CSS `@property` values so the
+browser's own compositor interpolates the color crossfade, instead of a
+JS `requestAnimationFrame` loop rewriting root variables every frame.
+Also borrowed the general shell shape (persistent now-playing bar,
+slide-in side drawer, marquee for overflowing titles).
 
-| Feature | Details |
-|---|---|
-| **32 Animated Themes** | Natural (Aurora, Forest, Ocean…), Literary Clock, F1 teams, TV shows, Movies |
-| **🍅 Pomodoro Mode** | Customisable work/break cycles, animated SVG ring, audio chime |
-| **🌤 Live Weather** | Open-Meteo API — free, no key needed, requests geolocation |
-| **🎵 Ambient Soundscapes** | 6 synthesised sounds (Rain, Brown Noise, Forest, Café, Ocean, Fire) — Web Audio API, zero audio files |
-| **🎨 Custom Theme Builder** | Pick your own colours, preview live, save up to 10 custom themes |
-| **📋 Session Focus Log** | Label what you're working on, grouped by day, export as CSV |
-| **📖 Literary Clock** | Every 5-minute slot (00:00–23:55) mapped to a prose sentence |
-| **⌨ Keyboard Shortcuts** | Space, R, T, F, P, M, L, K, G, ? |
-| **📺 Presentation Mode** | Hides everything except the clock |
-| **⛶ Kiosk Mode** | Fullscreen via the Fullscreen API |
-| **⏱ Cloudflare Time Sync** | Multi-probe NTP-over-HTTP with WorldTimeAPI fallback |
+**Monochrome (`monochrome-main`)** — the restraint: near-black neutral
+surfaces, one `cubic-bezier(0.2, 0, 0, 1)` easing curve and two duration
+tokens reused on every transition instead of one-off values per
+component, letting the sampled accent color be the one un-restrained
+element.
 
----
+Neither repo's YouTube-stream-handling code was used — see "What's
+intentionally not here."
 
-## 🚀 Getting Started
+## Feature coverage
 
-```bash
-# Install dev dependencies (TypeScript + Vite only — no runtime deps)
-npm install
+- **Playback**: play/pause, prev/next, seek (click-to-seek progress bar),
+  ±10s skip, mute, playback speed (0.75×–2×), volume, shuffle
+  (Fisher–Yates, anchors the currently-playing track), repeat
+  (off/all/one), persistent queue (debounced writes to IndexedDB).
+- **Discovery**: debounced, `AbortController`-cancelled search against the
+  official YouTube Data API v3, with a follow-up batched `videos.list`
+  call to fill in real durations. Recent searches are stored and shown as
+  chips.
+- **Library**: liked songs, playlists (create/rename/delete, add/remove
+  track, via a lightweight prompt-based picker), listening history,
+  "continue listening" (deduped, most-recent-first).
+- **Lyrics**: paste-your-own LRC text, synced via Liricle, active-line
+  highlighting, auto-scroll, click-to-seek. No third-party lyrics API is
+  wired in — see `lyrics/provider.ts` for why.
+- **Player experience**: mini-player mode, a queue/lyrics side drawer,
+  keyboard shortcuts (space, ←/→ seek, N/P, M mute, S shuffle, R repeat,
+  L like, Q queue, / search), Media Session integration (lock-screen/OS
+  media controls, progressive enhancement -- no-ops where unsupported),
+  a cinematic ambient canvas background behind the whole shell.
+- **PWA**: manifest + service worker caching the app shell (HTML/CSS/JS)
+  cache-first; explicitly never intercepts cross-origin requests
+  (YouTube API, thumbnails, the IFrame player), so nothing about the music
+  source itself is cached.
 
-# Start dev server with hot-reload
-npm run dev
+## Where the animation and workers actually earn their place
 
-# Type-check without building
-npm run typecheck
+- `visual/colorbridge.ts` + `workers/artwork.worker.ts`: artwork decode
+  and pixel sampling run entirely off the main thread. The registered
+  custom properties mean the resulting color crossfade costs nothing on
+  the main thread. Stale worker responses (from a track you've since
+  skipped past) are discarded.
+- `library/history.ts` + `workers/data.worker.ts`: the "continue
+  listening" dedup only goes to a worker once history has enough rows
+  (300+) that the postMessage round-trip is actually cheaper than a
+  direct main-thread loop -- see the file's header comment for why that
+  threshold exists instead of always using the worker.
+- `player/analyser.ts`: a real Web Audio `AnalyserNode` reads actual
+  frequency data for `audio-url` playback. For the YouTube IFrame
+  backend, there's a hard browser boundary -- the iframe's audio lives in
+  a separate, cross-origin browsing context that Web Audio has no access
+  to. Rather than fake reactive data, that path uses a clearly-labeled
+  ambient pulse (`isRealAudioData: false`) instead of pretending to
+  analyze audio it can't see.
+- `player/engine.ts`: queue-state writes are debounced (400ms); history
+  is trimmed in batches past 2000 rows, not checked on every write.
+- `ui/shell.ts`: search is debounced (300ms) with in-flight cancellation.
+- `visual/canvas.ts`: the ambient canvas stops entirely when the tab is
+  hidden and respects `prefers-reduced-motion` (bars go flat, particles
+  stop, rather than quietly ignoring the setting).
 
-# Production build → dist/
-npm run build
+## What's intentionally not here
 
-# Preview production build locally
-npm run preview
+`music/provider.ts` and `music/providers/youtube.ts` document this
+directly: there's no code path that fetches or deciphers a raw/adaptive
+YouTube stream URL. Search and metadata go through the official YouTube
+Data API v3; playback resolves to an `'iframe'` source that mounts
+YouTube's own official IFrame Player (video stays attached, per YouTube's
+terms) -- same approach already used in Session Clock's `musicdock.ts`.
+
+Lyrics are user-supplied rather than pulled from a third-party lyrics API
+for the same underlying reason most "free" lyrics endpoints are
+themselves unofficial/scraped services -- see `lyrics/provider.ts`.
+
+## What's stubbed / next steps
+
+- `getStoredYouTubeToken()` in `main.ts` reads a placeholder settings key.
+  Wire it to Session Clock's existing `ensureFreshToken()` /
+  `integrations.ts` OAuth flow.
+- Search suggestions are local (your own recent searches), not a live
+  YouTube suggest API -- that's a separate, undocumented endpoint with
+  its own quota/ToS questions, kept out for the same reason as the
+  stream-extraction layer.
+- No album/artist pages yet -- search results and playlists are
+  track-level only.
+- `public/manifest.json` has no icons yet.
+
+## Structure
+
 ```
-
----
-
-## 🌐 Deploy to GitHub Pages
-
-### Step 1 — Create the repo
-
-```bash
-git init
-git add .
-git commit -m "feat: session clock v8 (TypeScript)"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/session-clock.git
-git push -u origin main
+src/
+  core/types.ts                domain types
+  music/provider.ts             MusicProvider interface
+  music/providers/youtube.ts    the only provider implementation
+  player/queue.ts                shuffle/repeat/remove, provider-agnostic
+  player/backends.ts             AudioBackend + YouTubeIframeBackend
+  player/engine.ts               orchestrates provider + queue + backend
+  player/analyser.ts             real FFT (audio) / ambient fallback (iframe)
+  player/media-session.ts        OS/lock-screen media controls
+  library/likes.ts, playlists.ts, history.ts
+  lyrics/provider.ts, sync.ts    user-supplied LRC + Liricle sync
+  storage/db.ts                   Dexie/IndexedDB schema
+  visual/colorbridge.ts           drives the animated accent color
+  visual/canvas.ts                ambient cinematic background
+  workers/artwork.worker.ts       off-thread dominant-color extraction
+  workers/data.worker.ts          off-thread history dedup (large lists only)
+  ui/shell.ts, keyboard.ts        DOM, views, wiring, shortcuts
+public/
+  manifest.json, sw.js            PWA shell caching
 ```
-
-### Step 2 — Enable GitHub Pages
-
-1. Go to your repo → **Settings** → **Pages**
-2. Under **Source**, select **GitHub Actions**
-3. The `.github/workflows/deploy.yml` workflow runs automatically on every push to `main`
-4. Live at `https://YOUR-USERNAME.github.io/session-clock`
-
-> **No npm, no config, no manual steps.** The workflow type-checks, builds, and deploys automatically.
-
----
-
-## ⌨ Keyboard Shortcuts
-
-| Key | Action |
-|---|---|
-| `Space` | Start / Pause session timer |
-| `R` | Reset timer |
-| `T` | Cycle to next theme |
-| `F` | Toggle fullscreen / kiosk mode |
-| `P` | Toggle Pomodoro mode |
-| `M` | Open ambient sound mixer |
-| `L` | Open session focus log |
-| `K` | Collapse / expand theme panel |
-| `G` | Open custom theme builder |
-| `?` | Show all shortcuts |
-| `Esc` | Close any open panel |
-
----
-
-## 📁 File Structure
-
-```
-session-clock/
-├── index.html                  # HTML shell — structure, modals, canvas layers
-├── style.css                   # All CSS — themes, layout, animations, modals
-├── src/
-│   ├── main.ts                 # App entry — render loop, UI wiring, theme panel
-│   ├── types.ts                # All TypeScript interfaces and types
-│   ├── themes.ts               # All 32 theme definitions (typed objects)
-│   ├── litclock.ts             # Literary clock — 288 entries (00:00–23:55)
-│   ├── utils.ts                # Math helpers, formatters, constants
-│   ├── timesync.ts             # Cloudflare multi-probe NTP + WorldTimeAPI fallback
-│   ├── renderer.ts             # Canvas BG animations, symbols, all 14 transitions
-│   ├── sound.ts                # 6 Web Audio synthesisers — no audio files
-│   ├── pomodoro.ts             # Pomodoro timer module
-│   ├── focuslog.ts             # Session logging + CSV export
-│   └── weather.ts              # Open-Meteo weather fetch
-├── vite.config.ts              # Vite build config
-├── tsconfig.json               # TypeScript compiler config (strict mode)
-├── package.json
-├── .gitignore
-└── .github/
-    └── workflows/
-        └── deploy.yml          # GitHub Actions — type-check → build → deploy
-```
-
----
-
-## 🎨 Themes
-
-**Natural** — Aurora, Sunrise, Forest, Ocean, Candy, Nordic, Midnight, Lemon
-
-**Literary** — Literary Clock (every 5 minutes mapped to a prose sentence, 00:00–23:55)
-
-**F1 Teams** — Red Bull Racing, Scuderia Ferrari, Mercedes-AMG, McLaren, Aston Martin
-
-**TV Shows** — Supernatural, The Mentalist, The Sopranos, Dark, Breaking Bad, Stranger Things
-
-**Movies** — Interstellar, Dune, The Matrix, Blade Runner 2049, Inception, The Godfather
-
----
-
-## 🔧 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | TypeScript 5 — strict mode |
-| Build | Vite 5 + Terser (minify, tree-shake, drop console) |
-| Rendering | HTML5 Canvas (`bgCanvas`) + CSS custom properties |
-| Animation | Single `requestAnimationFrame` loop, delta-time capped at 50 ms |
-| Particles | `Float32Array` pool, SoA layout |
-| Time sync | Cloudflare `/cdn-cgi/trace` (multi-probe, 3 endpoints) + WorldTimeAPI fallback |
-| Weather | [Open-Meteo](https://open-meteo.com/) — free, no API key |
-| Sound | Web Audio API synthesis — zero audio files |
-| Storage | `localStorage` only — no backend, no cookies |
-| Fonts | Google Fonts CDN (only external resource) |
-| Deployment | GitHub Actions → GitHub Pages |
-
----
-
-## 🐛 Bugs Fixed vs v7
-
-| Bug | Fix |
-|---|---|
-| Pomodoro had two conflicting timer paths (`tick` vs `pomTimerTick`) | Unified into single `tick()` in `pomodoro.ts` |
-| `buildPanel()` stacked duplicate buttons on re-call | Containers cleared before rebuild; `onclick` used instead of `addEventListener` |
-| `syncResult` had unused `serverMs` field causing type confusion | Removed from interface |
-
----
-
-## 📜 License
-
-MIT — do whatever you like with it.
