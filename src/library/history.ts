@@ -1,5 +1,5 @@
 import { db } from '../storage/db';
-import type { DedupeHistoryRequest, DedupeHistoryResponse } from '../workers/data.worker';
+import type { DedupeHistoryRequest, DedupeHistoryResponse } from '../../workers/data.worker';
 
 // Below this many rows, a direct main-thread loop is faster than the
 // postMessage round-trip to a worker -- see data.worker.ts's header comment.
@@ -10,7 +10,7 @@ let nextRequestId = 0;
 
 function getWorker(): Worker {
   if (!worker) {
-    worker = new Worker(new URL('../workers/data.worker.ts', import.meta.url), { type: 'module' });
+    worker = new Worker(new URL('../../workers/data.worker.ts', import.meta.url), { type: 'module' });
   }
   return worker;
 }
