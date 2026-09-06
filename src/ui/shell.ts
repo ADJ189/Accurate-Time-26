@@ -364,28 +364,38 @@ export function mountShell(root: HTMLElement, engine: PlayerEngine, provider: Mu
   // ---------------------------------------------------------------------
   // Transport controls
   // ---------------------------------------------------------------------
-  $('#btn-play').addEventListener('click', () => engine.togglePlayPause());
+  // Cache these once instead of re-querying the DOM on every click and on
+  // every engine event (play/mute/speed/shuffle/repeat all toggle several
+  // times a session, and none of these nodes are ever replaced).
+  const btnPlay = $<HTMLButtonElement>('#btn-play');
+  const btnMute = $<HTMLButtonElement>('#btn-mute');
+  const btnSpeed = $<HTMLButtonElement>('#btn-speed');
+  const btnShuffle = $<HTMLButtonElement>('#btn-shuffle');
+  const btnRepeat = $<HTMLButtonElement>('#btn-repeat');
+  const btnLike = $<HTMLButtonElement>('#btn-like');
+
+  btnPlay.addEventListener('click', () => engine.togglePlayPause());
   $('#btn-next').addEventListener('click', () => void engine.next());
   $('#btn-prev').addEventListener('click', () => void engine.previous());
   $('#btn-skip-fwd').addEventListener('click', () => engine.skip(10));
   $('#btn-skip-back').addEventListener('click', () => engine.skip(-10));
-  $('#btn-mute').addEventListener('click', () => {
+  btnMute.addEventListener('click', () => {
     engine.toggleMute();
-    $('#btn-mute').textContent = engine.isMuted ? '🔇' : '🔊';
+    btnMute.textContent = engine.isMuted ? '🔇' : '🔊';
   });
-  $('#btn-speed').addEventListener('click', () => {
+  btnSpeed.addEventListener('click', () => {
     speedIndex = (speedIndex + 1) % SPEEDS.length;
     const rate = SPEEDS[speedIndex];
     engine.setPlaybackRate(rate);
-    $('#btn-speed').textContent = `${rate}×`;
+    btnSpeed.textContent = `${rate}×`;
   });
-  $('#btn-shuffle').addEventListener('click', () => {
+  btnShuffle.addEventListener('click', () => {
     engine.toggleShuffle();
-    $('#btn-shuffle').classList.toggle('active', engine.shuffle);
+    btnShuffle.classList.toggle('active', engine.shuffle);
   });
-  $('#btn-repeat').addEventListener('click', () => {
+  btnRepeat.addEventListener('click', () => {
     engine.cycleRepeat();
-    $('#btn-repeat').classList.toggle('active', engine.repeat !== 'off');
+    btnRepeat.classList.toggle('active', engine.repeat !== 'off');
   });
 
   const volInput = $<HTMLInputElement>('#vol');
@@ -399,14 +409,14 @@ export function mountShell(root: HTMLElement, engine: PlayerEngine, provider: Mu
     engine.seek(ratio * seekDurationSec);
   });
 
-  $('#btn-like').addEventListener('click', () => void toggleLikeCurrent());
+  btnLike.addEventListener('click', () => void toggleLikeCurrent());
   async function toggleLikeCurrent(): Promise<void> {
     const track = engine.currentTrack;
     if (!track) return;
     const liked = await toggleLike(track.id);
     void db.tracks.put(track);
-    $('#btn-like').textContent = liked ? '♥' : '♡';
-    $('#btn-like').classList.toggle('liked', liked);
+    btnLike.textContent = liked ? '♥' : '♡';
+    btnLike.classList.toggle('liked', liked);
   }
 
   // ---------------------------------------------------------------------
@@ -527,8 +537,8 @@ export function mountShell(root: HTMLElement, engine: PlayerEngine, provider: Mu
         });
         if (t) {
           void isLiked(t.id).then((liked) => {
-            $('#btn-like').textContent = liked ? '♥' : '♡';
-            $('#btn-like').classList.toggle('liked', liked);
+            btnLike.textContent = liked ? '♥' : '♡';
+            btnLike.classList.toggle('liked', liked);
           });
         }
         void renderQueueDrawer();
@@ -537,7 +547,7 @@ export function mountShell(root: HTMLElement, engine: PlayerEngine, provider: Mu
         break;
       }
       case 'playstate':
-        $('#btn-play').textContent = event.playing ? '⏸' : '▶';
+        btnPlay.textContent = event.playing ? '⏸' : '▶';
         break;
       case 'timeupdate': {
         seekDurationSec = event.durationSec;
