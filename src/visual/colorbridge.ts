@@ -1,4 +1,4 @@
-import type { ArtworkColorRequest, ArtworkColorResponse } from '../workers/artwork.worker';
+import type { ArtworkColorRequest, ArtworkColorResponse } from '../../workers/artwork.worker';
 
 /**
  * Drives the now-playing bar's ambient tint. Registered custom properties
@@ -11,7 +11,7 @@ import type { ArtworkColorRequest, ArtworkColorResponse } from '../workers/artwo
  * scrolling/dragging on the UI thread.
  */
 export class ColorBridge {
-  private worker = new Worker(new URL('../workers/artwork.worker.ts', import.meta.url), { type: 'module' });
+  private worker = new Worker(new URL('../../workers/artwork.worker.ts', import.meta.url), { type: 'module' });
   private nextRequestId = 0;
   private latestRequestId = 0; // guards against a slow, stale response clobbering a newer track's color
   private root = document.documentElement;
